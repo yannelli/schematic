@@ -2,9 +2,10 @@
 
 namespace Yannelli\Schematic;
 
+use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider;
 
-class SchematicServiceProvider extends ServiceProvider
+class SchematicServiceProvider extends ServiceProvider implements DeferrableProvider
 {
     public function register(): void
     {
@@ -28,5 +29,14 @@ class SchematicServiceProvider extends ServiceProvider
                 __DIR__ . '/../config/schematic.php' => config_path('schematic.php'),
             ], 'schematic-config');
         }
+    }
+
+    /** @return array<int, string> */
+    public function provides(): array
+    {
+        return [
+            Compiler::class,
+            Schematic::class,
+        ];
     }
 }
