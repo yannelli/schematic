@@ -34,6 +34,9 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
+    "scripts": {
+        "test": "pest"
+    },
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true
