@@ -1,39 +1,110 @@
-# Laravel Schematic
+# Schematic
 
-Database-driven templating language with JSON Schema generation for LLM structured outputs (OpenAI, Anthropic, etc.).
+- [Introduction](#introduction)
+- [Installation](#installation)
+- [Configuration](#configuration)
+    - [Table Prefix](#table-prefix)
+    - [JSON Schema Defaults](#json-schema-defaults)
+    - [Custom Models](#custom-models)
+- [Creating Templates](#creating-templates)
+    - [Adding Sections](#adding-sections)
+    - [Defining Fields](#defining-fields)
+    - [Array & Object Fields](#array-and-object-fields)
+- [JSON Schema Generation](#json-schema-generation)
+    - [Template Schemas](#template-schemas)
+    - [Section Schemas](#section-schemas)
+    - [Using With Anthropic](#using-with-anthropic)
+    - [Using With OpenAI](#using-with-openai)
+- [Managing Sections](#managing-sections)
+    - [Enabling & Disabling Sections](#enabling-and-disabling-sections)
+    - [Reordering Sections](#reordering-sections)
+    - [Iterating Sections](#iterating-sections)
+    - [Adding & Removing Fields](#adding-and-removing-fields)
+- [Rendering Templates](#rendering-templates)
+    - [Full Template Rendering](#full-template-rendering)
+    - [Previewing With Examples](#previewing-with-examples)
+- [Template Syntax](#template-syntax)
+- [Custom Macros](#custom-macros)
+- [Extending Models](#extending-models)
+- [License](#license)
 
+<a name="introduction"></a>
+## Introduction
+
+Schematic is a database-driven templating engine for Laravel that generates JSON Schema definitions from your templates. It is designed for use with LLM structured output APIs such as those provided by OpenAI and Anthropic, allowing you to define templates with typed fields and automatically produce valid JSON Schema for tool use and structured responses.
+
+<a name="installation"></a>
 ## Installation
+
+Install Schematic via Composer:
 
 ```bash
 composer require yannelli/schematic
 ```
 
-Publish and run migrations:
+After installing, publish and run the migrations:
 
 ```bash
 php artisan vendor:publish --tag=schematic-migrations
 php artisan migrate
 ```
 
-Optionally publish config:
+You may optionally publish the configuration file:
 
 ```bash
 php artisan vendor:publish --tag=schematic-config
 ```
 
-## Quick Start
+<a name="configuration"></a>
+## Configuration
+
+The Schematic configuration file is located at `config/schematic.php`. Each configuration option is documented below.
+
+<a name="table-prefix"></a>
+### Table Prefix
+
+The `table_prefix` option controls the prefix applied to all Schematic database tables:
+
+| Option | Environment Variable | Default | Description |
+|---|---|---|---|
+| `table_prefix` | — | `schematic_` | The prefix used for all database tables created by Schematic. |
+
+<a name="json-schema-defaults"></a>
+### JSON Schema Defaults
+
+The `schema` options control the defaults used when generating JSON Schema output:
+
+| Option | Environment Variable | Default | Description |
+|---|---|---|---|
+| `schema.draft` | — | `https://json-schema.org/draft/2020-12/schema` | The JSON Schema draft URI included in schema documents. |
+| `schema.strict` | — | `true` | When enabled, all generated schemas include `additionalProperties: false`. |
+
+<a name="custom-models"></a>
+### Custom Models
+
+If you need to extend the base Schematic models, you may specify your custom model classes in the `models` configuration array. See [Extending Models](#extending-models) for details.
+
+<a name="creating-templates"></a>
+## Creating Templates
+
+To create a new template, use the `Schematic` facade's `create` method:
 
 ```php
 use Yannelli\Schematic\Facades\Schematic;
 
-// Create a template
 $template = Schematic::create(
     slug: 'psychiatric-evaluation',
     name: 'Psychiatric Evaluation Note',
     description: 'Standard psychiatric evaluation template for initial patient encounters',
 );
+```
 
-// Add sections with fields
+<a name="adding-sections"></a>
+### Adding Sections
+
+Once a template has been created, you may add sections to it using the `addSection` method. Each section defines a portion of the template with its own content, fields, and optional example data:
+
+```php
 $template->addSection(
     slug: 'chief-complaint',
     name: 'Chief Complaint',
@@ -52,7 +123,14 @@ $template->addSection(
         'complaint' => 'Patient reports increasing anxiety over the past 3 months',
     ],
 );
+```
 
+<a name="defining-fields"></a>
+### Defining Fields
+
+Each field in a section requires a `name`, `type`, and `description`. You may also specify whether the field is `required` or `nullable`:
+
+```php
 $template->addSection(
     slug: 'mental-status-exam',
     name: 'Mental Status Exam',
@@ -82,7 +160,16 @@ TPL,
         'suicidal_ideation' => null,
     ],
 );
+```
 
+When a field's `type` is set to `enum`, you should provide an `enum` array containing the allowed values. Fields are required by default; set `required` to `false` and `nullable` to `true` for optional fields.
+
+<a name="array-and-object-fields"></a>
+### Array & Object Fields
+
+For more complex data structures, you may define fields with `array` and `object` types. Array fields require an `items` key describing the structure of each element:
+
+```php
 $template->addSection(
     slug: 'diagnoses',
     name: 'Diagnoses',
@@ -116,26 +203,43 @@ TPL,
 );
 ```
 
+<a name="json-schema-generation"></a>
 ## JSON Schema Generation
 
-Generate schemas for LLM structured output:
+Schematic generates JSON Schema definitions from your templates, ready for use with LLM structured output APIs.
+
+<a name="template-schemas"></a>
+### Template Schemas
+
+To generate a JSON Schema for an entire template, use the `toJsonSchema` method on a template instance. For a full schema document including the `$schema` header, use `toJsonSchemaDocument`:
 
 ```php
-// Full template schema
+use Yannelli\Schematic\Facades\Schematic;
+
+// Schema object
 $schema = $template->toJsonSchema();
 
 // Full document with $schema header
 $doc = $template->toJsonSchemaDocument();
 
-// Single section schema
+// Via facade
+$schema = Schematic::schema('psychiatric-evaluation');
+$doc = Schematic::schemaDocument('psychiatric-evaluation');
+```
+
+<a name="section-schemas"></a>
+### Section Schemas
+
+You may also generate a schema for a single section:
+
+```php
 $mseSchema = $template->sectionSchema('mental-status-exam');
 
-// Via facade shortcuts
-$schema = Schematic::schema('psychiatric-evaluation');
+// Via facade
 $sectionSchema = Schematic::sectionSchema('psychiatric-evaluation', 'chief-complaint');
 ```
 
-Example output for the `mental-status-exam` section:
+The generated schema for the `mental-status-exam` section would look like the following:
 
 ```json
 {
@@ -169,10 +273,14 @@ Example output for the `mental-status-exam` section:
 }
 ```
 
-### Using with Anthropic
+<a name="using-with-anthropic"></a>
+### Using With Anthropic
+
+To use a Schematic template with the Anthropic API, pass the generated schema as a tool's `input_schema`:
 
 ```php
 use Anthropic\Anthropic;
+use Yannelli\Schematic\Facades\Schematic;
 
 $schema = Schematic::schema('psychiatric-evaluation');
 
@@ -193,10 +301,14 @@ $response = Anthropic::messages()->create([
 ]);
 ```
 
-### Using with OpenAI
+<a name="using-with-openai"></a>
+### Using With OpenAI
+
+When using OpenAI's structured output, pass the schema document to the `response_format` parameter:
 
 ```php
 use OpenAI\Laravel\Facades\OpenAI;
+use Yannelli\Schematic\Facades\Schematic;
 
 $schema = Schematic::schemaDocument('psychiatric-evaluation');
 
@@ -216,46 +328,64 @@ $response = OpenAI::chat()->create([
 ]);
 ```
 
-## Section Management
+> [!NOTE]
+> OpenAI's structured output requires the full schema document (via `schemaDocument`), while Anthropic's tool use expects the schema object (via `schema`).
 
-### Enable / Disable Sections
+<a name="managing-sections"></a>
+## Managing Sections
+
+<a name="enabling-and-disabling-sections"></a>
+### Enabling & Disabling Sections
+
+You may enable or disable individual sections on a template. Disabled sections are excluded from both schema generation and rendering:
 
 ```php
 $template->section('diagnoses')->disable();
 
-// Only enabled sections are included in render/schema
-$schema = $template->toJsonSchema(); // Won't include 'diagnoses'
-$output = $template->render($data);  // Won't render 'diagnoses'
+// Only enabled sections are included
+$schema = $template->toJsonSchema();
+$output = $template->render($data);
 
 $template->section('diagnoses')->enable();
 ```
 
-### Iterate Sections
+<a name="reordering-sections"></a>
+### Reordering Sections
+
+To change the order in which sections appear, pass an array of section slugs to the `reorderSections` method:
 
 ```php
-// Only enabled sections, ordered
+$template->reorderSections([
+    'chief-complaint',
+    'diagnoses',
+    'mental-status-exam',
+]);
+```
+
+<a name="iterating-sections"></a>
+### Iterating Sections
+
+To iterate over a template's sections, use the `iterateSections` method. By default, only enabled sections are returned in their defined order:
+
+```php
 foreach ($template->iterateSections() as $section) {
     echo "{$section->name}: " . ($section->is_enabled ? 'ON' : 'OFF') . "\n";
     echo json_encode($section->toJsonSchema(), JSON_PRETTY_PRINT) . "\n\n";
 }
+```
 
-// All sections, including disabled
+To include disabled sections, use `iterateAllSections`:
+
+```php
 foreach ($template->iterateAllSections() as $section) {
     // ...
 }
 ```
 
-### Reorder Sections
+<a name="adding-and-removing-fields"></a>
+### Adding & Removing Fields
 
-```php
-$template->reorderSections([
-    'chief-complaint',
-    'diagnoses',        // moved up
-    'mental-status-exam', // moved down
-]);
-```
-
-### Add / Remove Fields
+You may add or remove fields from an existing section:
 
 ```php
 $section = $template->section('chief-complaint');
@@ -270,46 +400,13 @@ $section->addField(
 $section->removeField('onset');
 ```
 
-## Custom Macros
+<a name="rendering-templates"></a>
+## Rendering Templates
 
-Register macros to extend the template language:
+<a name="full-template-rendering"></a>
+### Full Template Rendering
 
-```php
-// In a service provider boot() method
-use Yannelli\Schematic\Facades\Schematic;
-
-Schematic::macro('component', fn (string $name) => view("components.{$name}")->render());
-Schematic::macro('timestamp', fn () => now()->toDateTimeString());
-Schematic::macro('badge', fn (string $label, string $color) => "<span class=\"badge badge-{$color}\">{$label}</span>");
-```
-
-Use in templates:
-
-```
-@component("vital-signs")
-Generated at: @timestamp()
-Status: @badge("Active", "green")
-```
-
-## Previewing with Examples
-
-```php
-// Set example data on a section
-$template->section('chief-complaint')->setExamples([
-    'complaint' => 'Patient reports difficulty sleeping for the past 2 weeks',
-]);
-
-// Preview a single section
-echo $template->section('chief-complaint')->preview();
-
-// Preview the entire template
-echo $template->preview();
-
-// Via facade
-echo Schematic::preview('psychiatric-evaluation');
-```
-
-## Rendering
+To render a template with data, pass an associative array keyed by section slug to the `render` method:
 
 ```php
 $data = [
@@ -330,23 +427,77 @@ $data = [
 ];
 
 echo $template->render($data);
-// Or: Schematic::render('psychiatric-evaluation', $data);
+
+// Via facade
+echo Schematic::render('psychiatric-evaluation', $data);
 ```
 
-## Template Syntax Reference
+<a name="previewing-with-examples"></a>
+### Previewing With Examples
+
+When you have defined example data on your sections, you may preview the rendered output without providing data manually. To set example data on a section, use the `setExamples` method:
+
+```php
+$template->section('chief-complaint')->setExamples([
+    'complaint' => 'Patient reports difficulty sleeping for the past 2 weeks',
+]);
+```
+
+To preview a single section or the entire template using its example data:
+
+```php
+// Preview a single section
+echo $template->section('chief-complaint')->preview();
+
+// Preview the entire template
+echo $template->preview();
+
+// Via facade
+echo Schematic::preview('psychiatric-evaluation');
+```
+
+<a name="template-syntax"></a>
+## Template Syntax
+
+Schematic provides a lightweight template syntax for defining section content:
 
 | Syntax | Description |
 |---|---|
-| `{{ variable }}` | Variable substitution |
-| `{{ nested.key }}` | Dot-notation access |
-| `@if(var) ... @endif` | Conditional block |
-| `@if(var) ... @else ... @endif` | Conditional with else |
-| `@foreach(items as item) ... @endforeach` | Loop over arrays |
-| `@macroName("arg1", "arg2")` | Custom macro call |
+| `{{ variable }}` | Variable substitution. |
+| `{{ nested.key }}` | Dot-notation access for nested values. |
+| `@if(var) ... @endif` | Conditional block; renders content only when `var` is truthy. |
+| `@if(var) ... @else ... @endif` | Conditional with an else branch. |
+| `@foreach(items as item) ... @endforeach` | Iterate over an array. |
+| `@macroName("arg1", "arg2")` | Invoke a registered custom macro. |
 
+<a name="custom-macros"></a>
+## Custom Macros
+
+You may register custom macros to extend the template syntax. Macros should be registered in a service provider's `boot` method:
+
+```php
+use Yannelli\Schematic\Facades\Schematic;
+
+public function boot(): void
+{
+    Schematic::macro('component', fn (string $name) => view("components.{$name}")->render());
+    Schematic::macro('timestamp', fn () => now()->toDateTimeString());
+    Schematic::macro('badge', fn (string $label, string $color) => "<span class=\"badge badge-{$color}\">{$label}</span>");
+}
+```
+
+Once registered, macros may be used in any template content:
+
+```
+@component("vital-signs")
+Generated at: @timestamp()
+Status: @badge("Active", "green")
+```
+
+<a name="extending-models"></a>
 ## Extending Models
 
-If you need to extend the base models, update the config:
+If you need to add custom behavior to the Schematic models, you may extend the base `Template` and `Section` classes and register them in the configuration:
 
 ```php
 // config/schematic.php
@@ -356,7 +507,7 @@ If you need to extend the base models, update the config:
 ],
 ```
 
-Your custom models should extend the base classes:
+Your custom models should extend the corresponding base classes:
 
 ```php
 use Yannelli\Schematic\Models\Template;
@@ -367,6 +518,7 @@ class CustomTemplate extends Template
 }
 ```
 
+<a name="license"></a>
 ## License
 
-MIT
+Schematic is open-sourced software licensed under the [MIT license](LICENSE).
