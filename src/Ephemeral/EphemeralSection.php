@@ -59,20 +59,14 @@ class EphemeralSection implements Renderable, SchemaGeneratable
 
         foreach ($this->fieldDefinitions() as $field) {
             $properties[$field->name] = $field->toJsonSchemaProperty();
-
-            if ($field->required) {
-                $required[] = $field->name;
-            }
+            $required[] = $field->name;
         }
 
         $schema = [
             'type' => 'object',
             'properties' => $properties,
+            'required' => $required,
         ];
-
-        if ($required !== []) {
-            $schema['required'] = $required;
-        }
 
         if ($this->description) {
             $schema['description'] = $this->description;

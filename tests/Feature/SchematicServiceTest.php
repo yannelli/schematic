@@ -94,7 +94,7 @@ it('generates full schema document', function () {
     $doc = $this->schematic->schemaDocument('doc-svc');
 
     expect($doc)->toHaveKey('$schema')
-        ->and($doc['title'])->toBe('Document');
+        ->and($doc['title'])->toBe('document');
 });
 
 // ---------------------------------------------------------------

@@ -56,7 +56,7 @@ it('generates json schema from fields', function () {
         ->and($schema['properties'])->toHaveKey('count')
         ->and($schema['properties']['title']['type'])->toBe('string')
         ->and($schema['properties']['count']['type'])->toBe('integer')
-        ->and($schema['required'])->toBe(['title'])
+        ->and($schema['required'])->toBe(['title', 'count'])
         ->and($schema['description'])->toBe('Test section');
 });
 
@@ -86,7 +86,7 @@ it('generates schema with nullable fields', function () {
     $schema = $section->toJsonSchema();
 
     expect($schema['properties']['notes']['type'])->toBe(['string', 'null'])
-        ->and($schema)->not->toHaveKey('required');
+        ->and($schema['required'])->toBe(['notes']);
 });
 
 // ---------------------------------------------------------------

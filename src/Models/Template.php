@@ -5,6 +5,7 @@ namespace Yannelli\Schematic\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Yannelli\Schematic\Compiler;
 use Yannelli\Schematic\Contracts\Renderable;
 use Yannelli\Schematic\Contracts\SchemaGeneratable;
@@ -150,7 +151,7 @@ class Template extends Model implements Renderable, SchemaGeneratable
     {
         return [
             '$schema' => config('schematic.schema.draft'),
-            'title' => $this->name,
+            'title' => Str::snake($this->name),
             ...$this->toJsonSchema(),
         ];
     }

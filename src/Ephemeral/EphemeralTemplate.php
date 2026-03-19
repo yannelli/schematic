@@ -3,6 +3,7 @@
 namespace Yannelli\Schematic\Ephemeral;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Yannelli\Schematic\Compiler;
 use Yannelli\Schematic\Contracts\Renderable;
 use Yannelli\Schematic\Contracts\SchemaGeneratable;
@@ -158,7 +159,7 @@ class EphemeralTemplate implements Renderable, SchemaGeneratable
     {
         return [
             '$schema' => config('schematic.schema.draft'),
-            'title' => $this->name,
+            'title' => Str::snake($this->name),
             ...$this->toJsonSchema(),
         ];
     }
