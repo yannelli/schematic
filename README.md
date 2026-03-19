@@ -510,6 +510,16 @@ class CustomTemplate extends Template
 }
 ```
 
+<a name="credis"></a>
+
+## Credits
+- [Ryan Yannelli](https://ryanyannelli.com)
+  - [Website](https://ryanyannelli.com)
+  - [GitHub](https://github.com/yannelli)
+- [Nextvisit AI](https://nextvisit.ai)
+- [All Contributors](../../contributors)
+
+
 <a name="license"></a>
 ## License
 
