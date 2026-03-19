@@ -338,7 +338,7 @@ The generated schema for the `mental-status-exam` section would look like the fo
       "description": "Details of suicidal ideation if present"
     }
   },
-  "required": ["appearance", "mood", "affect", "thought_process"],
+  "required": ["appearance", "mood", "affect", "thought_process", "suicidal_ideation"],
   "description": "Structured mental status examination findings",
   "additionalProperties": false
 }
