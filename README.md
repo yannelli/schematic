@@ -1,3 +1,5 @@
+![GitHub branch check runs](https://img.shields.io/github/check-runs/yannelli/schematic/main?style=for-the-badge) ![Packagist Version](https://img.shields.io/packagist/v/yannelli/schematic?style=for-the-badge) 
+
 # Schematic
 
 - [Introduction](#introduction)
