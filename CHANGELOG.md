@@ -1,5 +1,13 @@
 # v0.1.1
 
+## v0.2.1 - 2026-03-19
+
+### What's Changed
+
+* Make SchematicServiceProvider a deferred service provider by @yannelli in https://github.com/yannelli/schematic/pull/5
+
+**Full Changelog**: https://github.com/yannelli/schematic/compare/v0.2.0...v0.2.1
+
 ## v0.2.0 - 2026-03-19
 
 ### What's Changed
