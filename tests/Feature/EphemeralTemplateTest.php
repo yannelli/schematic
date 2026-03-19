@@ -142,7 +142,7 @@ it('generates full schema document', function () {
     $doc = $template->toJsonSchemaDocument();
 
     expect($doc)->toHaveKey('$schema')
-        ->and($doc['title'])->toBe('Document')
+        ->and($doc['title'])->toBe('document')
         ->and($doc['type'])->toBe('object');
 });
 

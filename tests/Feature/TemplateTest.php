@@ -165,7 +165,7 @@ it('generates full JSON Schema document', function () {
     $doc = $template->toJsonSchemaDocument();
 
     expect($doc['$schema'])->toBe('https://json-schema.org/draft/2020-12/schema')
-        ->and($doc['title'])->toBe('Document')
+        ->and($doc['title'])->toBe('document')
         ->and($doc['type'])->toBe('object');
 });
 

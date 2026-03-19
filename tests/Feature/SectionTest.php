@@ -131,7 +131,7 @@ it('generates JSON schema from fields', function () {
     expect($schema['type'])->toBe('object')
         ->and($schema['properties'])->toHaveKey('title')
         ->and($schema['properties'])->toHaveKey('optional')
-        ->and($schema['required'])->toBe(['title'])
+        ->and($schema['required'])->toBe(['title', 'optional'])
         ->and($schema['additionalProperties'])->toBeFalse();
 });
 
