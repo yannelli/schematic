@@ -11,6 +11,9 @@
     - [Adding Sections](#adding-sections)
     - [Defining Fields](#defining-fields)
     - [Array & Object Fields](#array-and-object-fields)
+- [Ephemeral Templates](#ephemeral-templates)
+    - [Creating Ephemeral Templates](#creating-ephemeral-templates)
+    - [Ephemeral Schema & Rendering](#ephemeral-schema-and-rendering)
 - [JSON Schema Generation](#json-schema-generation)
     - [Template Schemas](#template-schemas)
     - [Section Schemas](#section-schemas)
@@ -32,7 +35,7 @@
 <a name="introduction"></a>
 ## Introduction
 
-Schematic is a database-driven templating engine for Laravel that generates JSON Schema definitions from your templates. It is designed for use with LLM structured output APIs such as those provided by OpenAI and Anthropic, allowing you to define templates with typed fields and automatically produce valid JSON Schema for tool use and structured responses.
+Schematic is a templating engine for Laravel that generates JSON Schema definitions from your templates. It is designed for use with LLM structured output APIs such as those provided by OpenAI and Anthropic, allowing you to define templates with typed fields and automatically produce valid JSON Schema for tool use and structured responses. Templates can be persisted to the database or created as [ephemeral (in-memory) templates](#ephemeral-templates) for on-the-fly use without any database overhead.
 
 <a name="installation"></a>
 ## Installation
@@ -193,6 +196,82 @@ TPL,
         ],
     ],
 );
+```
+
+<a name="ephemeral-templates"></a>
+## Ephemeral Templates
+
+Ephemeral templates are in-memory templates that are **not persisted to the database**. They are useful for one-off or dynamic templates that you build at runtime — no migrations or database queries required.
+
+Ephemeral templates support the same core features as database-backed templates: sections, fields, JSON Schema generation, rendering, and previewing.
+
+<a name="creating-ephemeral-templates"></a>
+### Creating Ephemeral Templates
+
+Use the `ephemeral` method on the `Schematic` facade to create an in-memory template:
+
+```php
+use Yannelli\Schematic\Facades\Schematic;
+
+$template = Schematic::ephemeral(
+    slug: 'intake-form',
+    name: 'Patient Intake Form',
+    description: 'A quick intake form built on the fly',
+);
+
+$template->addSection(
+    slug: 'demographics',
+    name: 'Demographics',
+    content: '{{ patient_name }}, Age: {{ age }}',
+    fields: [
+        ['name' => 'patient_name', 'type' => 'string', 'description' => 'Full name'],
+        ['name' => 'age', 'type' => 'integer', 'description' => 'Patient age'],
+    ],
+    examples: ['patient_name' => 'Jane Doe', 'age' => 34],
+);
+```
+
+You may also create ephemeral templates directly via the `EphemeralTemplate` class:
+
+```php
+use Yannelli\Schematic\Ephemeral\EphemeralTemplate;
+
+$template = EphemeralTemplate::make('quick-note', 'Quick Note');
+$section = $template->addSection('body', 'Body', content: '{{ note }}');
+$section->addField('note', 'string', 'The note content');
+```
+
+Sections on ephemeral templates support the same fluent methods as database-backed sections, including `addField`, `removeField`, `enable`, `disable`, and `setExamples`. All mutations happen in memory.
+
+<a name="ephemeral-schema-and-rendering"></a>
+### Ephemeral Schema & Rendering
+
+Ephemeral templates generate JSON Schema and render content exactly like their database-backed counterparts:
+
+```php
+// JSON Schema generation
+$schema = $template->toJsonSchema();
+$doc = $template->toJsonSchemaDocument();
+$sectionSchema = $template->sectionSchema('demographics');
+
+// Rendering with data
+$output = $template->render([
+    'demographics' => ['patient_name' => 'Alice Smith', 'age' => 28],
+]);
+
+// Preview using example data
+$preview = $template->preview();
+```
+
+Section management works identically — you can iterate, reorder, enable, and disable sections:
+
+```php
+$template->section('demographics')->disable();
+$template->reorderSections(['body', 'demographics']);
+
+foreach ($template->iterateSections() as $section) {
+    // Only enabled sections
+}
 ```
 
 <a name="json-schema-generation"></a>

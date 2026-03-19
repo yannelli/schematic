@@ -3,6 +3,7 @@
 namespace Yannelli\Schematic;
 
 use Closure;
+use Yannelli\Schematic\Ephemeral\EphemeralTemplate;
 use Yannelli\Schematic\Models\Section;
 use Yannelli\Schematic\Models\Template;
 
@@ -49,6 +50,18 @@ class Schematic
         $modelClass = config('schematic.models.template', Template::class);
 
         return $modelClass::findBySlugOrFail($slug);
+    }
+
+    // ---------------------------------------------------------------
+    // Ephemeral Templates
+    // ---------------------------------------------------------------
+
+    /**
+     * Create an ephemeral (in-memory, non-persisted) template.
+     */
+    public function ephemeral(string $slug, string $name, ?string $description = null, array $metadata = []): EphemeralTemplate
+    {
+        return EphemeralTemplate::make($slug, $name, $description, $metadata);
     }
 
     // ---------------------------------------------------------------
