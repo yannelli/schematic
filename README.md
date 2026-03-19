@@ -3,7 +3,6 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Configuration](#configuration)
-    - [Table Prefix](#table-prefix)
     - [JSON Schema Defaults](#json-schema-defaults)
     - [Custom Models](#custom-models)
 - [Creating Templates](#creating-templates)
@@ -59,15 +58,6 @@ php artisan vendor:publish --tag=schematic-config
 ## Configuration
 
 The Schematic configuration file is located at `config/schematic.php`. Each configuration option is documented below.
-
-<a name="table-prefix"></a>
-### Table Prefix
-
-The `table_prefix` option controls the prefix applied to all Schematic database tables:
-
-| Option | Environment Variable | Default | Description |
-|---|---|---|---|
-| `table_prefix` | — | `schematic_` | The prefix used for all database tables created by Schematic. |
 
 <a name="json-schema-defaults"></a>
 ### JSON Schema Defaults
